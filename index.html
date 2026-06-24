@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="minimum-scale=0.2, maximum-scale=5.0, user-scalable=yes">
+<title>Porky's Game® - Dadi</title>
+<style>
+@font-face {
+    font-family: 'Carlito';
+    src: url('Carlito-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+* {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+::selection { background: transparent; }
+::-moz-selection { background: transparent; }
+
+html {
+  scrollbar-width: none;
+  overscroll-behavior-x: none;
+  touch-action: manipulation;
+  overflow-y: auto;
+  user-select: none;
+  -webkit-user-select: none;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0; height: 0; }
+
+body {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: 'Carlito', Arial, Helvetica, sans-serif;
+  text-align: center;
+  background:
+  linear-gradient(
+    rgba(215, 175, 90, 0.85),
+    rgba(215, 175, 90, 0.85)
+  ),
+  url("images/logo_splash.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
+  overflow-x: hidden;
+  touch-action: manipulation;
+}
+
+h1 {
+  margin-top: 2.5vmin;
+  font-size: 3.6vmin;
+  color: #502369;
+  font-weight: bold;
+  overflow-x: hidden;
+}
+
+.description {
+  font-size: 2.2vmin;
+  margin: 0.8vmin auto 2vmin;
+  color: #333;
+  font-weight: bold;
+  max-width: 80vmin;
+}
+
+.dice-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8vmin;
+  flex-wrap: wrap;
+  margin-top: 2vmin;
+}
+
+.dice-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5vmin;
+}
+
+.dice-label {
+  font-size: 2.4vmin;
+  color: #502369;
+  font-weight: bold;
+}
+
+/* ===== Dado CSS 3D ===== */
+.scene {
+  width: 18vmin;
+  height: 18vmin;
+  min-width: 90px;
+  min-height: 90px;
+  max-width: 140px;
+  max-height: 140px;
+  perspective: 800px;
+  cursor: pointer;
+}
+
+.cube {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 1.4s cubic-bezier(.22,1,.36,1);
+}
+
+.face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #9b4fd4, #2d0558);
+  border: 3px solid #c8860a;
+  border-radius: 1.2vmin;
+  box-shadow: inset 0 0 14px rgba(0,0,0,.5), 0 0 12px rgba(80,35,105,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5vmin;
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(0,0,0,.6);
+}
+
+.face img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* dimensione cubo dinamica via JS (translateZ = metà larghezza) */
+.face.f1 { transform: rotateY(0deg)    translateZ(var(--half)); }
+.face.f2 { transform: rotateY(90deg)   translateZ(var(--half)); }
+.face.f3 { transform: rotateY(180deg)  translateZ(var(--half)); }
+.face.f4 { transform: rotateY(-90deg)  translateZ(var(--half)); }
+.face.f5 { transform: rotateX(90deg)   translateZ(var(--half)); }
+.face.f6 { transform: rotateX(-90deg)  translateZ(var(--half)); }
+
+.cube.rolling {
+  transition: transform 1.4s cubic-bezier(.22,1,.36,1);
+}
+
+.result-label {
+  min-height: 1.6vmin;
+  font-size: 2vmin;
+  font-weight: bold;
+  color: #502369;
+  background: #f9e0a7;
+  border: 2px solid #502369;
+  border-radius: 1vmin;
+  padding: 0.5vmin 1.5vmin;
+  max-width: 32vmin;
+  line-height: 1.3;
+  margin-top: 4vmin;
+}
+
+button {
+  padding: 1.2vmin 2vmin;
+  margin: 0.5vmin;
+  font-size: 2vmin;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn {
+  background: linear-gradient(145deg, #dfad24, #9b710e);
+  color: #3b2500;
+}
+.btn:hover { filter: brightness(1.15); transform: scale(1.03); }
+.btn:active { transform: scale(0.98); }
+
+.btn-purple {
+  background: linear-gradient(145deg, #a45de6, #502369);
+  color: white;
+}
+.btn-purple:hover { filter: brightness(1.2); transform: scale(1.03); }
+.btn-purple:active { transform: scale(0.98); }
+
+.btn:disabled, .btn-purple:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: none !important;
+  transform: none !important;
+}
+
+.actions-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3vmin;
+  margin-top: 4vmin;
+  flex-wrap: wrap;
+}
+
+.info {
+  margin-top: 2vmin;
+  font-size: 2vmin;
+  color: #502369;
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+
+<h1>Porky's Game® – Dadi</h1>
+<p class="description">Lancia i dadi singolarmente oppure in sequenza (prima il dado 1, poi il dado 2).<br>
+Ogni faccia corrisponde a una mossa, ma se ti rifiuti, il gruppo decide la tua penitenza (e potrebbe piacerti di meno, quindi FALLO!).</p>
+
+<div class="dice-row">
+
+  <div class="dice-col">
+    <div class="dice-label">COSA</div>
+    <div class="scene">
+      <div class="cube" id="cube1">
+        <div class="face f1"><img src="images/bacio.png" alt="Bacio"></div>
+        <div class="face f2"><img src="images/lecca.png" alt="Lecca"></div>
+        <div class="face f3"><img src="images/succhia.png" alt="Succhia"></div>
+        <div class="face f4"><img src="images/mano.png" alt="Schiaffo"></div>
+        <div class="face f5"><img src="images/pagaia.png" alt="Pagaiata"></div>
+        <div class="face f6"><img src="images/annusa.png" alt="Annusa"></div>
+      </div>
+    </div>
+    <div class="result-label" id="result1">—</div>
+  </div>
+
+  <div class="dice-col">
+    <div class="dice-label">DOVE</div>
+    <div class="scene">
+      <div class="cube" id="cube2">
+        <div class="face f1"><img src="images/faccia.png" alt="Faccia"></div>
+        <div class="face f2"><img src="images/culo.png" alt="Culo"></div>
+        <div class="face f3"><img src="images/coscia.png" alt="Coscia"></div>
+        <div class="face f4"><img src="images/intimo.png" alt="Intimo"></div>
+        <div class="face f5"><img src="images/piedi.png" alt="Piedi"></div>
+        <div class="face f6"><img src="images/seno.png" alt="Tette"></div>
+      </div>
+    </div>
+    <div class="result-label" id="result2">—</div>
+  </div>
+
+</div>
+
+<div class="actions-row">
+  <button class="btn" id="btnDado1">DADO 1<br><small>(lancia dado 1)</small></button>
+  <button class="btn-purple" id="btnSequenza">1 + 2<br><small>(in sequenza)</small></button>
+  <button class="btn" id="btnDado2">DADO 2<br><small>(lancia dado 2)</small></button>
+</div>
+
+<div class="info" id="infoMsg"></div>
+
+<script>
+/* =========================================================
+   AZIONI DELLE FACCE — placeholder da sostituire in futuro.
+   Indice array 0..5 corrisponde alla faccia 1..6 del dado.
+   ========================================================= */
+const mosseDado1 = ["BACIA", "LECCA", "SUCCHIA", "SCHIAFFO", "PAGAIATA", "ANNUSA"];
+const mosseDado2 = ["FACCIA", "CULO", "COSCIA", "INTIMO", "PIEDI", "TETTE"];
+
+/* Imposta la metà del lato del cubo come variabile CSS,
+   in modo che le facce restino sempre attaccate al cubo
+   indipendentemente dalla dimensione reale a schermo. */
+function setCubeHalf(sceneEl) {
+  const size = sceneEl.getBoundingClientRect().width;
+  sceneEl.style.setProperty('--half', (size / 2) + 'px');
+}
+
+const scene1 = document.querySelector('#cube1').parentElement;
+const scene2 = document.querySelector('#cube2').parentElement;
+setCubeHalf(scene1);
+setCubeHalf(scene2);
+window.addEventListener('resize', () => { setCubeHalf(scene1); setCubeHalf(scene2); });
+
+/* Rotazioni che portano ciascuna faccia frontale verso la camera */
+const ROT = {
+  1: { x: 0,    y: 0   },
+  2: { x: 0,    y: -90 },
+  3: { x: 0,    y: -180},
+  4: { x: 0,    y: 90  },
+  5: { x: -90,  y: 0   },
+  6: { x: 90,   y: 0   }
+};
+
+let girI1 = 0; // giri extra accumulati, per non "tornare indietro" visivamente
+let girI2 = 0;
+
+function lanciaDado(cubeEl, resultEl, mosse, giriRef, callback) {
+  return new Promise(resolve => {
+    const numero = Math.floor(Math.random() * 6) + 1;
+    const rot = ROT[numero];
+
+    // giri extra random per dare sensazione di lancio (2-4 giri completi)
+    const extraGiriX = (2 + Math.floor(Math.random() * 2)) * 360;
+    const extraGiriY = (2 + Math.floor(Math.random() * 2)) * 360;
+
+    giriRef.val += extraGiriX;
+    const targetX = giriRef.val + rot.x;
+    giriRef.valY = (giriRef.valY || 0) + extraGiriY;
+    const targetY = giriRef.valY + rot.y;
+
+    resultEl.textContent = "Lancio in corso…";
+    cubeEl.style.transform = `rotateX(${targetX}deg) rotateY(${targetY}deg)`;
+
+    setTimeout(() => {
+      const azione = mosse[numero - 1];
+      resultEl.textContent = `Risultato: → ${azione}`;
+      resolve({ numero, azione });
+    }, 1450);
+  });
+}
+
+const stato1 = { val: 0, valY: 0 };
+const stato2 = { val: 0, valY: 0 };
+
+const cube1 = document.getElementById('cube1');
+const cube2 = document.getElementById('cube2');
+const result1 = document.getElementById('result1');
+const result2 = document.getElementById('result2');
+const infoMsg = document.getElementById('infoMsg');
+
+const btnDado1 = document.getElementById('btnDado1');
+const btnDado2 = document.getElementById('btnDado2');
+const btnSequenza = document.getElementById('btnSequenza');
+
+scene1.addEventListener('click', async () => {
+  if (btnDado1.disabled) return;
+  setButtonsDisabled(true);
+  infoMsg.textContent = "";
+  await lanciaDado(cube1, result1, mosseDado1, stato1);
+  setButtonsDisabled(false);
+});
+
+scene2.addEventListener('click', async () => {
+  if (btnDado2.disabled) return;
+  setButtonsDisabled(true);
+  infoMsg.textContent = "";
+  await lanciaDado(cube2, result2, mosseDado2, stato2);
+  setButtonsDisabled(false);
+});
+
+function setButtonsDisabled(disabled) {
+  btnDado1.disabled = disabled;
+  btnDado2.disabled = disabled;
+  btnSequenza.disabled = disabled;
+}
+
+btnDado1.addEventListener('click', async () => {
+  setButtonsDisabled(true);
+  infoMsg.textContent = "";
+  await lanciaDado(cube1, result1, mosseDado1, stato1);
+  setButtonsDisabled(false);
+});
+
+btnDado2.addEventListener('click', async () => {
+  setButtonsDisabled(true);
+  infoMsg.textContent = "";
+  await lanciaDado(cube2, result2, mosseDado2, stato2);
+  setButtonsDisabled(false);
+});
+
+btnSequenza.addEventListener('click', async () => {
+  setButtonsDisabled(true);
+  infoMsg.textContent = "Lancio il dado 1...";
+  const r1 = await lanciaDado(cube1, result1, mosseDado1, stato1);
+  infoMsg.textContent = "Ora il dado 2...";
+  const r2 = await lanciaDado(cube2, result2, mosseDado2, stato2);
+  infoMsg.textContent = ` `;
+  setButtonsDisabled(false);
+});
+</script>
+</body>
+</html>
