@@ -80,7 +80,6 @@ h1 {
   flex-direction: column;
   align-items: center;
   gap: 1.5vmin;
-
 }
 
 .dice-label {
@@ -100,7 +99,6 @@ h1 {
   max-height: 500px;
   perspective: 900px;
   cursor: pointer;
-
 }
 
 .cube {
@@ -160,6 +158,27 @@ h1 {
   margin-top: 4vmin;
 }
 
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(20vmin, 28vmin));
+  grid-auto-rows: auto;
+  gap: 1.5vmin 3vmin;
+  justify-content: center;
+  margin-top: 4vmin;
+}
+
+.actions-grid button {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btn-red {
+  background: linear-gradient(145deg, #e05050, #8a1010);
+  color: white;
+}
+.btn-red:hover { filter: brightness(1.15); transform: scale(1.03); }
+.btn-red:active { transform: scale(0.98); }
+
 button {
   padding: 1.2vmin 2vmin;
   margin: 0.5vmin;
@@ -184,7 +203,14 @@ button {
 .btn-purple:hover { filter: brightness(1.2); transform: scale(1.03); }
 .btn-purple:active { transform: scale(0.98); }
 
-.btn:disabled, .btn-purple:disabled {
+.btn-player {
+  background: linear-gradient(145deg, #dfad24, #9b710e);
+  color: #3b2500;
+}
+.btn-player:hover { filter: brightness(1.15); transform: scale(1.03); }
+.btn-player:active { transform: scale(0.98); }
+
+.btn:disabled, .btn-purple:disabled, .btn-player:disabled, .btn-red:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   filter: none !important;
@@ -205,6 +231,86 @@ button {
   font-size: 3.2vmin;
   color: #502369;
   font-weight: bold;
+}
+
+/* ===== Sezione giocatori ===== */
+.players-box {
+  margin: 5vmin auto 3vmin;
+  max-width: 92vmin;
+  border: 3px solid #502369;
+  border-radius: 1.2vmin;
+  background: rgba(255,255,255,0.6);
+  padding: 2vmin 2.5vmin;
+}
+
+.players-title {
+  font-size: 2.6vmin;
+  color: #502369;
+  font-weight: bold;
+  margin-bottom: 1.5vmin;
+}
+
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(10, auto);
+  grid-auto-flow: column;
+  gap: 0.8vmin 2.5vmin;
+}
+
+.player-slot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.9vmin;
+  font-weight: bold;
+  color: #333;
+  text-align: left;
+  background: rgba(255,255,255,0.5);
+  border-radius: 0.5vmin;
+  padding: 0.3vmin 0.8vmin;
+}
+
+.player-slot .player-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-slot .player-remove {
+  background: none;
+  border: none;
+  color: #a00000;
+  font-weight: bold;
+  font-size: 1.8vmin;
+  cursor: pointer;
+  padding: 0 0.5vmin;
+  margin: 0;
+}
+
+.player-input-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.player-input {
+  width: 100%;
+  font-size: 1.9vmin;
+  font-weight: bold;
+  font-family: inherit;
+  border: 1px dashed #502369;
+  border-radius: 0.5vmin;
+  padding: 0.3vmin 0.8vmin;
+  background: rgba(255,255,255,0.7);
+  color: #333;
+}
+
+.players-error {
+  min-height: 2.4vmin;
+  font-size: 1.8vmin;
+  color: #a00000;
+  font-weight: bold;
+  margin-top: 1vmin;
 }
 </style>
 </head>
@@ -228,7 +334,9 @@ Ogni faccia corrisponde a una mossa, ma se ti rifiuti, <br> il gruppo decide la 
         <div class="face f6"><img src="images/annusa.png" alt="Annusa"></div>
       </div>
     </div>
-    <div class="result-label" id="result1">—</div>
+    <div class="result-label" id="result1">
+      <div class="res-azione" id="azione1">—</div>
+    </div>
   </div>
 
   <div class="dice-col">
@@ -243,18 +351,31 @@ Ogni faccia corrisponde a una mossa, ma se ti rifiuti, <br> il gruppo decide la 
         <div class="face f6"><img src="images/seno.png" alt="Tette"></div>
       </div>
     </div>
-    <div class="result-label" id="result2">—</div>
+    <div class="result-label" id="result2">
+      <div class="res-azione" id="azione2">—</div>
+    </div>
   </div>
 
 </div>
 
-<div class="actions-row">
-  <button class="btn" id="btnDado1">DADO 1<br><small>(lancia dado 1)</small></button>
-  <button class="btn-purple" id="btnSequenza">1 + 2<br><small>(in sequenza)</small></button>
-  <button class="btn" id="btnDado2">DADO 2<br><small>(lancia dado 2)</small></button>
+<div class="actions-grid">
+  <button class="btn" id="btnDado1">LANCIA<br><small>DADO 1</small></button>
+  <button class="btn-purple" id="btnSequenza">TUTTO CASUALE<br><small>(dadi + giocatori)</small></button>
+  <button class="btn" id="btnDado2">LANCIA<br><small>DADO 2</small></button>
+
+  <button class="btn-player" id="btnGioc1">ESTRAI<br><small>GIOCATORE 1</small></button>
+  <button class="btn-red" id="btnEliminaTutti">ELIMINA<br><small>GIOCATORI</small></button>
+  <button class="btn-player" id="btnGioc2">ESTRAI<br><small>GIOCATORE 2</small></button>
 </div>
 
 <div class="info" id="infoMsg"></div>
+
+<!-- ===== Sezione giocatori ===== -->
+<div class="players-box">
+  <div class="players-title">GIOCATORI (max 40)</div>
+  <div class="players-grid" id="playersGrid"></div>
+  <div class="players-error" id="playersError"></div>
+</div>
 
 <script>
 /* =========================================================
@@ -288,15 +409,31 @@ const ROT = {
   6: { x: 90,   y: 0   }
 };
 
-let girI1 = 0; // giri extra accumulati, per non "tornare indietro" visivamente
-let girI2 = 0;
+const azioneVal = [null, null]; // azione corrente per dado1 (idx0) e dado2 (idx1)
 
-function lanciaDado(cubeEl, resultEl, mosse, giriRef, callback) {
+function renderResult(boxNum) {
+  const idx = boxNum - 1;
+  const el = boxNum === 1 ? azione1 : azione2;
+  const azione = azioneVal[idx];
+  const giocatore = (players.length >= 2) ? giocatoreVal[idx] : null;
+
+  if (!azione && !giocatore) {
+    el.textContent = "—";
+  } else if (azione && !giocatore) {
+    el.textContent = `Risultato: → ${azione}`;
+  } else if (!azione && giocatore) {
+    el.textContent = giocatore;
+  } else {
+    el.textContent = `${giocatore}: → ${azione}`;
+  }
+}
+
+function lanciaDado(cubeEl, boxNum, mosse, giriRef, skipRender) {
   return new Promise(resolve => {
     const numero = Math.floor(Math.random() * 6) + 1;
     const rot = ROT[numero];
+    const idx = boxNum - 1;
 
-    // giri extra random per dare sensazione di lancio (2-4 giri completi)
     const extraGiriX = (2 + Math.floor(Math.random() * 2)) * 360;
     const extraGiriY = (2 + Math.floor(Math.random() * 2)) * 360;
 
@@ -305,12 +442,16 @@ function lanciaDado(cubeEl, resultEl, mosse, giriRef, callback) {
     giriRef.valY = (giriRef.valY || 0) + extraGiriY;
     const targetY = giriRef.valY + rot.y;
 
-    resultEl.textContent = "Lancio in corso…";
+    if (!skipRender) {
+      const el = boxNum === 1 ? azione1 : azione2;
+      el.textContent = "Lancio in corso…";
+    }
     cubeEl.style.transform = `rotateX(${targetX}deg) rotateY(${targetY}deg)`;
 
     setTimeout(() => {
       const azione = mosse[numero - 1];
-      resultEl.textContent = `Risultato: → ${azione}`;
+      azioneVal[idx] = azione;
+      if (!skipRender) renderResult(boxNum);
       resolve({ numero, azione });
     }, 1450);
   });
@@ -321,19 +462,30 @@ const stato2 = { val: 0, valY: 0 };
 
 const cube1 = document.getElementById('cube1');
 const cube2 = document.getElementById('cube2');
-const result1 = document.getElementById('result1');
-const result2 = document.getElementById('result2');
+const azione1 = document.getElementById('azione1');
+const azione2 = document.getElementById('azione2');
 const infoMsg = document.getElementById('infoMsg');
 
 const btnDado1 = document.getElementById('btnDado1');
 const btnDado2 = document.getElementById('btnDado2');
 const btnSequenza = document.getElementById('btnSequenza');
+const btnGioc1 = document.getElementById('btnGioc1');
+const btnGioc2 = document.getElementById('btnGioc2');
+const btnEliminaTutti = document.getElementById('btnEliminaTutti');
+
+function setButtonsDisabled(disabled) {
+  btnDado1.disabled = disabled;
+  btnDado2.disabled = disabled;
+  btnSequenza.disabled = disabled;
+  btnGioc1.disabled = disabled;
+  btnGioc2.disabled = disabled;
+}
 
 scene1.addEventListener('click', async () => {
   if (btnDado1.disabled) return;
   setButtonsDisabled(true);
   infoMsg.textContent = "";
-  await lanciaDado(cube1, result1, mosseDado1, stato1);
+  await lanciaDado(cube1, 1, mosseDado1, stato1);
   setButtonsDisabled(false);
 });
 
@@ -341,39 +493,209 @@ scene2.addEventListener('click', async () => {
   if (btnDado2.disabled) return;
   setButtonsDisabled(true);
   infoMsg.textContent = "";
-  await lanciaDado(cube2, result2, mosseDado2, stato2);
+  await lanciaDado(cube2, 2, mosseDado2, stato2);
   setButtonsDisabled(false);
 });
-
-function setButtonsDisabled(disabled) {
-  btnDado1.disabled = disabled;
-  btnDado2.disabled = disabled;
-  btnSequenza.disabled = disabled;
-}
 
 btnDado1.addEventListener('click', async () => {
   setButtonsDisabled(true);
   infoMsg.textContent = "";
-  await lanciaDado(cube1, result1, mosseDado1, stato1);
+  await lanciaDado(cube1, 1, mosseDado1, stato1);
   setButtonsDisabled(false);
 });
 
 btnDado2.addEventListener('click', async () => {
   setButtonsDisabled(true);
   infoMsg.textContent = "";
-  await lanciaDado(cube2, result2, mosseDado2, stato2);
+  await lanciaDado(cube2, 2, mosseDado2, stato2);
   setButtonsDisabled(false);
 });
 
 btnSequenza.addEventListener('click', async () => {
   setButtonsDisabled(true);
-  infoMsg.textContent = "Lancio il dado 1...";
-  const r1 = await lanciaDado(cube1, result1, mosseDado1, stato1);
-  infoMsg.textContent = "Ora il dado 2...";
-  const r2 = await lanciaDado(cube2, result2, mosseDado2, stato2);
-  infoMsg.textContent = ` `;
+  infoMsg.textContent = "";
+  azione1.textContent = "Lancio in corso…";
+  azione2.textContent = "Lancio in corso…";
+
+  const r1 = await lanciaDado(cube1, 1, mosseDado1, stato1, true);
+  const r2 = await lanciaDado(cube2, 2, mosseDado2, stato2, true);
+
+  if (players.length >= 2) {
+    const g1 = pickRandomExcluding(null);
+    giocatoreVal[0] = g1;
+    const g2 = pickRandomExcluding(g1);
+    giocatoreVal[1] = g2;
+  }
+
+  renderResult(1);
+  renderResult(2);
   setButtonsDisabled(false);
 });
+
+/* =========================================================
+   GESTIONE GIOCATORI
+   ========================================================= */
+let players = [];
+try {
+  const saved = localStorage.getItem('porkys_players');
+  if (saved) players = JSON.parse(saved);
+} catch (e) { players = []; }
+
+let giocatoreVal = [null, null];
+
+const playersGrid = document.getElementById('playersGrid');
+const playersError = document.getElementById('playersError');
+const MAX_PLAYERS = 40;
+const NAME_REGEX = /^[A-Za-zÀ-ÖØ-öø-ÿ0-9 ]+$/;
+
+function savePlayers() {
+  try { localStorage.setItem('porkys_players', JSON.stringify(players)); }
+  catch (e) { /* storage non disponibile, ignoro */ }
+}
+
+function setGiocatore(boxNum, name) {
+  const idx = boxNum - 1;
+  giocatoreVal[idx] = name;
+  renderResult(boxNum);
+}
+
+function pickRandomExcluding(excludeName) {
+  const pool = players.filter(p => p !== excludeName);
+  if (pool.length === 0) return excludeName || null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function drawPlayer(boxNum) {
+  if (players.length < 2) return;
+  const idx = boxNum - 1;
+  const otherIdx = 1 - idx;
+  const ownVal = giocatoreVal[idx];
+  const otherVal = giocatoreVal[otherIdx];
+
+  if (players.length === 2) {
+    // con esattamente 2 giocatori esistono solo 2 stati possibili:
+    // estrarre uno significa automaticamente assegnare l'altro alla casella opposta
+    const newOwn = players.find(p => p !== ownVal) || players[0];
+    const newOther = players.find(p => p !== newOwn);
+    giocatoreVal[idx] = newOwn;
+    giocatoreVal[otherIdx] = newOther;
+  } else {
+    // con 3+ giocatori l'estrazione riguarda SOLO la casella cliccata:
+    // escludo sia il proprio valore attuale (per garantire un cambiamento)
+    // sia il valore dell'altra casella (per non creare un duplicato),
+    // senza mai modificare l'altra casella
+    let pool = players.filter(p => p !== ownVal && p !== otherVal);
+    if (pool.length === 0) pool = players.filter(p => p !== ownVal);
+    const candidate = pool[Math.floor(Math.random() * pool.length)];
+    giocatoreVal[idx] = candidate;
+  }
+
+  renderResult(1);
+  renderResult(2);
+}
+
+btnGioc1.addEventListener('click', () => drawPlayer(1));
+btnGioc2.addEventListener('click', () => drawPlayer(2));
+
+function isValidName(name) {
+  if (!name) return "Inserisci un nome.";
+  if (!NAME_REGEX.test(name)) return "Niente caratteri speciali.";
+  if (players.some(p => p.toLowerCase() === name.toLowerCase())) return "Nome già presente.";
+  return null;
+}
+
+function removePlayer(index) {
+  const removed = players[index];
+  players.splice(index, 1);
+  giocatoreVal.forEach((v, i) => {
+    if (v === removed) setGiocatore(i + 1, null);
+  });
+  savePlayers();
+  renderPlayersGrid();
+  renderResult(1);
+  renderResult(2);
+}
+
+function addPlayer(name) {
+  const clean = name.trim();
+  const error = isValidName(clean);
+  if (error) {
+    playersError.textContent = error;
+    return false;
+  }
+  playersError.textContent = "";
+  players.push(clean);
+  savePlayers();
+  renderPlayersGrid();
+  renderResult(1);
+  renderResult(2);
+  return true;
+}
+
+btnEliminaTutti.addEventListener('click', () => {
+  if (players.length === 0) return;
+  const conferma = confirm("Eliminare tutti i giocatori? L'azione non è reversibile.");
+  if (!conferma) return;
+  players = [];
+  giocatoreVal = [null, null];
+  savePlayers();
+  renderPlayersGrid();
+  renderResult(1);
+  renderResult(2);
+});
+
+function renderPlayersGrid() {
+  playersGrid.innerHTML = "";
+
+  players.forEach((name, index) => {
+    const slot = document.createElement('div');
+    slot.className = 'player-slot';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'player-name';
+    nameSpan.textContent = name;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'player-remove';
+    removeBtn.textContent = '✕';
+    removeBtn.addEventListener('click', () => removePlayer(index));
+
+    slot.appendChild(nameSpan);
+    slot.appendChild(removeBtn);
+    playersGrid.appendChild(slot);
+  });
+
+  if (players.length < MAX_PLAYERS) {
+    const inputWrap = document.createElement('div');
+    inputWrap.className = 'player-input-wrap';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'player-input';
+    input.placeholder = '+ aggiungi giocatore';
+    input.maxLength = 24;
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const ok = addPlayer(input.value);
+        if (ok) {
+          // dopo l'aggiunta, renderPlayersGrid ricrea l'input:
+          // riportiamo subito il focus sul nuovo input per scrittura continua
+          const newInput = document.querySelector('.player-input');
+          if (newInput) newInput.focus();
+        }
+      }
+    });
+
+    inputWrap.appendChild(input);
+    playersGrid.appendChild(inputWrap);
+  }
+}
+
+renderPlayersGrid();
+renderResult(1);
+renderResult(2);
 </script>
 </body>
 </html>
