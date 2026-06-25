@@ -3,8 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="minimum-scale=0.2, maximum-scale=5.0, user-scalable=yes">
-<link rel="icon" href="images/icon-180.png">
-<link href="images/icon-180.png" rel="apple-touch-icon">
 <title>Porky's Game® - Dadi</title>
 <style>
 @font-face {
@@ -328,12 +326,12 @@ Ogni faccia corrisponde a una mossa, ma se ti rifiuti, <br> il gruppo decide la 
     <div class="dice-label">COSA</div>
     <div class="scene">
       <div class="cube" id="cube1">
-        <div class="face f1"><img src="images/bacio.png" alt="Bacio"></div>
-        <div class="face f2"><img src="images/lecca.png" alt="Lecca"></div>
-        <div class="face f3"><img src="images/succhia.png" alt="Succhia"></div>
-        <div class="face f4"><img src="images/mano.png" alt="Schiaffo"></div>
-        <div class="face f5"><img src="images/pagaia.png" alt="Pagaiata"></div>
-        <div class="face f6"><img src="images/annusa.png" alt="Annusa"></div>
+        <div class="face f1"></div>
+        <div class="face f2"></div>
+        <div class="face f3"></div>
+        <div class="face f4"></div>
+        <div class="face f5"></div>
+        <div class="face f6"></div>
       </div>
     </div>
     <div class="result-label" id="result1">
@@ -345,12 +343,12 @@ Ogni faccia corrisponde a una mossa, ma se ti rifiuti, <br> il gruppo decide la 
     <div class="dice-label">DOVE</div>
     <div class="scene">
       <div class="cube" id="cube2">
-        <div class="face f1"><img src="images/faccia.png" alt="Faccia"></div>
-        <div class="face f2"><img src="images/culo.png" alt="Culo"></div>
-        <div class="face f3"><img src="images/coscia.png" alt="Coscia"></div>
-        <div class="face f4"><img src="images/intimo.png" alt="Intimo"></div>
-        <div class="face f5"><img src="images/piedi.png" alt="Piedi"></div>
-        <div class="face f6"><img src="images/seno.png" alt="Tette"></div>
+        <div class="face f1"></div>
+        <div class="face f2"></div>
+        <div class="face f3"></div>
+        <div class="face f4"></div>
+        <div class="face f5"></div>
+        <div class="face f6"></div>
       </div>
     </div>
     <div class="result-label" id="result2">
@@ -384,8 +382,64 @@ Ogni faccia corrisponde a una mossa, ma se ti rifiuti, <br> il gruppo decide la 
    AZIONI DELLE FACCE — placeholder da sostituire in futuro.
    Indice array 0..5 corrisponde alla faccia 1..6 del dado.
    ========================================================= */
-const mosseDado1 = ["BACIA", "LECCA", "SUCCHIA", "SCHIAFFO", "PAGAIATA", "ANNUSA"];
-const mosseDado2 = ["FACCIA", "CULO", "COSCIA", "INTIMO", "PIEDI", "TETTE"];
+/* =========================================================
+   POOL DI AZIONI per il dado1 — espandibile a piacere.
+   Ad ogni lancio vengono scelte 6 voci a caso dal pool
+   (o tutte se il pool ha esattamente 6 elementi) e assegnate
+   alle 6 facce fisiche del cubo: il dado resta sempre a 6 facce,
+   ma il contenuto cambia lancio dopo lancio.
+   Per aggiungere una nuova azione, basta aggiungere una riga qui:
+   { img: "images/nomefile.png", label: "ETICHETTA" }
+   ========================================================= */
+const poolDado1 = [
+  { img: "images/bacio.png",    label: "BACIA" },
+  { img: "images/lecca.png",    label: "LECCA" },
+  { img: "images/succhia.png",  label: "SUCCHIA" },
+  { img: "images/mano.png",     label: "SCHIAFFO" },
+  { img: "images/pagaia.png",   label: "PAGAIATA" },
+  { img: "images/naso.png",     label: "ANNUSA" },
+  { img: "images/denti.png",    label: "MORDI" },
+  { img: "images/sussurra.png", label: "SUSSURRA" },
+  { img: "images/calcio.png",   label: "CALCIA" },
+];
+
+/* =========================================================
+   POOL DI AZIONI per il dado2 — stesso meccanismo del dado1:
+   espandibile a piacere, 6 voci pescate a caso ad ogni lancio.
+   ========================================================= */
+const poolDado2 = [
+  { img: "images/faccia.png",   label: "FACCIA" },
+  { img: "images/culo.png",     label: "CULO" },
+  { img: "images/coscia.png",   label: "COSCIA" },
+  { img: "images/intimo.png",   label: "FIGA" },
+  { img: "images/piedi.png",    label: "PIEDI" },
+  { img: "images/seno.png",     label: "TETTE" },
+  { img: "images/orecchio.png", label: "ORECCHIO" },
+  { img: "images/naso.png",     label: "NASO" },
+  { img: "images/cazzo.png",    label: "CAZZO" },
+];
+
+function sampleSenzaRipetizioni(pool, n) {
+  const copia = pool.slice();
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  // se il pool ha meno di n elementi, ripeto ciclicamente
+  const risultato = [];
+  for (let i = 0; i < n; i++) risultato.push(copia[i % copia.length]);
+  return risultato;
+}
+
+function rimescolaFacce(cubeEl, pool) {
+  const faces = cubeEl.querySelectorAll('.face');
+  const scelte = sampleSenzaRipetizioni(pool, faces.length);
+  faces.forEach((faceEl, i) => {
+    const item = scelte[i];
+    faceEl.innerHTML = `<img src="${item.img}" alt="${item.label}">`;
+  });
+  return scelte.map(item => item.label); // array di 6 etichette, in ordine f1..f6
+}
 
 /* Imposta la metà del lato del cubo come variabile CSS,
    in modo che le facce restino sempre attaccate al cubo
@@ -463,7 +517,9 @@ const stato1 = { val: 0, valY: 0 };
 const stato2 = { val: 0, valY: 0 };
 
 const cube1 = document.getElementById('cube1');
+rimescolaFacce(cube1, poolDado1); // popolamento iniziale, prima del primo lancio
 const cube2 = document.getElementById('cube2');
+rimescolaFacce(cube2, poolDado2); // popolamento iniziale, prima del primo lancio
 const azione1 = document.getElementById('azione1');
 const azione2 = document.getElementById('azione2');
 const infoMsg = document.getElementById('infoMsg');
@@ -487,7 +543,8 @@ scene1.addEventListener('click', async () => {
   if (btnDado1.disabled) return;
   setButtonsDisabled(true);
   infoMsg.textContent = "";
-  await lanciaDado(cube1, 1, mosseDado1, stato1);
+  const mosseAttuali1 = rimescolaFacce(cube1, poolDado1);
+  await lanciaDado(cube1, 1, mosseAttuali1, stato1);
   setButtonsDisabled(false);
 });
 
@@ -495,21 +552,24 @@ scene2.addEventListener('click', async () => {
   if (btnDado2.disabled) return;
   setButtonsDisabled(true);
   infoMsg.textContent = "";
-  await lanciaDado(cube2, 2, mosseDado2, stato2);
+  const mosseAttuali2 = rimescolaFacce(cube2, poolDado2);
+  await lanciaDado(cube2, 2, mosseAttuali2, stato2);
   setButtonsDisabled(false);
 });
 
 btnDado1.addEventListener('click', async () => {
   setButtonsDisabled(true);
   infoMsg.textContent = "";
-  await lanciaDado(cube1, 1, mosseDado1, stato1);
+  const mosseAttuali1 = rimescolaFacce(cube1, poolDado1);
+  await lanciaDado(cube1, 1, mosseAttuali1, stato1);
   setButtonsDisabled(false);
 });
 
 btnDado2.addEventListener('click', async () => {
   setButtonsDisabled(true);
   infoMsg.textContent = "";
-  await lanciaDado(cube2, 2, mosseDado2, stato2);
+  const mosseAttuali2 = rimescolaFacce(cube2, poolDado2);
+  await lanciaDado(cube2, 2, mosseAttuali2, stato2);
   setButtonsDisabled(false);
 });
 
@@ -519,8 +579,10 @@ btnSequenza.addEventListener('click', async () => {
   azione1.textContent = "Lancio in corso…";
   azione2.textContent = "Lancio in corso…";
 
-  const r1 = await lanciaDado(cube1, 1, mosseDado1, stato1, true);
-  const r2 = await lanciaDado(cube2, 2, mosseDado2, stato2, true);
+  const mosseAttuali1 = rimescolaFacce(cube1, poolDado1);
+  const r1 = await lanciaDado(cube1, 1, mosseAttuali1, stato1, true);
+  const mosseAttuali2 = rimescolaFacce(cube2, poolDado2);
+  const r2 = await lanciaDado(cube2, 2, mosseAttuali2, stato2, true);
 
   if (players.length >= 2) {
     const g1 = pickRandomExcluding(null);
